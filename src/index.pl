@@ -1,14 +1,10 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-
-# Function to run the Python script with a given message
 sub run_pretty_output {
     my $message = shift;
     system("python3 makeoutputpretty.py \"$message\"");
 }
-
-# Data for various responses
 my @jokes = (
     "Why don't scientists trust atoms? Because they make up everything!",
     "What do you call a bear with no teeth? A gummy bear!",
@@ -55,19 +51,19 @@ my @constellations = (
     "Scorpius (The Scorpion)"
 );
 
-# Initial greeting
+# greetings human
 run_pretty_output("What do you want to do today?");
 
-# Get user input
+# G
 print "> ";
 my $input = <STDIN>;
 chomp $input;
 
-# Check for attachment-related keywords
+# s
 if ($input =~ /\b(file|document|attachment|attach|upload|pdf|doc|txt)\b/i) {
     run_pretty_output("You can add data to my knowledge with the Resources folder.");
 }
-# Handle all tasks
+# h
 else {
     my $response;
     
@@ -137,6 +133,6 @@ else {
         $response = "I don't understand that command.";
     }
     
-    # Output the response through the Python script
+    # out you response!!!! go get pretty and get the fuck out
     run_pretty_output($response);
 }
