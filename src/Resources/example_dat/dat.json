@@ -30,9 +30,9 @@
                 "(?i)\\bwhat is\\s+(\\d+)\\s*([+\\-*/])\\s*(\\d+)\\b"
             ],
             "responses": [
-                "The result is {result}",
-                "That would be {result}",
-                "{result}"
+                "The result is {i can't calculate math}",
+                "That would be {i can't calculate math}",
+                "{I can't actuallly calculate math. You may be able to rephrase your question to trigger an AI response instead.}"
             ]
         },
         "name_questions": {

@@ -112,11 +112,15 @@ def main():
         
     import os
     from groq import Groq
-    with open('.key') as f:
+    with open('./.key') as f:
         api_key = f.read().strip()
     client = Groq(api_key=api_key)
     chat_completion = client.chat.completions.create(
         messages=[
+            {
+                "role": "system",
+                "content": "You are Ina, an intelligent, adaptive, and learning semi-offline voice assistant. You are able to answer questions and provide information based on your knowledge and the knowledge of the user. You are also able to learn new things from the user. You are able to use the internet to answer questions, but this is limited. If you are unable to answer a question, you should say so. "
+            },
             {
                 "role": "user", 
                 "content": question
