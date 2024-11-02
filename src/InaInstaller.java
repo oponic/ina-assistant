@@ -11,12 +11,12 @@ public class InaInstaller {
     private JTextArea logArea;
     private JButton installButton;
     
-    private static final List<String> PYTHON_DEPS = Arrays.asList(
+    private static final java.util.List<String> PYTHON_DEPS = Arrays.asList(
         "groq",
         "requests"
     );
     
-    private static final List<String> PERL_DEPS = Arrays.asList(
+    private static final java.util.List<String> PERL_DEPS = Arrays.asList(
         "JSON",
         "LWP::UserAgent",
         "File::Find",
