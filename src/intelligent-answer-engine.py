@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 import sys
 import re
+import subprocess
+import platform
+ping_param = '-n' if platform.system().lower() == 'windows' else '-c'
+ping_cmd = ['ping', ping_param, '1', '8.8.8.8']
+try:
+    subprocess.check_call(ping_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+except subprocess.CalledProcessError:
+    print("Connection failure")
+    sys.exit(1)
 
 MAX_QUESTION_LEN = 1024
 MAX_ANSWER_LEN = 4096
@@ -101,7 +110,23 @@ def main():
     if not answer:
         answer = (question)
         
-    print(answer)
+    import os
+    from groq import Groq
+    with open('.key') as f:
+        api_key = f.read().strip()
+    client = Groq(api_key=api_key)
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "user", 
+                "content": question
+            }
+        ],
+        model="mixtral-8x7b-32768",
+        temperature=0.7,
+    )
+    ai_response = chat_completion.choices[0].message.content
+    print(ai_response)
     return 0
 
 if __name__ == "__main__":

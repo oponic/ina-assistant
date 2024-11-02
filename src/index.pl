@@ -1,10 +1,14 @@
 #!/usr/bin/perl
 use warnings;
 use File::Find;
+use JSON;
 
 # Add this near the top of the file with other variable declarations
 my $last_response;
 my $api_key = "7f61fb0108f81e97a2ff52ab35a45b8c";  # Replace with your actual API key
+
+# Add these variables near the top of your script with other initializations
+my %all_responses;
 
 sub run_pretty_output {
     my $message = shift;
@@ -30,6 +34,32 @@ sub load_custom_commands {
     );
 }
 load_custom_commands();
+
+# Add this function to load JSON files
+sub load_json_responses {
+    my $json = JSON->new->utf8;
+    
+    find(
+        sub {
+            return unless -f && /\.json$/;
+            open my $fh, '<', $_ or die "Cannot open $_ : $!";
+            local $/;
+            my $content = <$fh>;
+            close $fh;
+            
+            my $data = $json->decode($content);
+            if ($data->{common_questions}) {
+                foreach my $category (keys %{$data->{common_questions}}) {
+                    $all_responses{$category} = $data->{common_questions}{$category};
+                }
+            }
+        },
+        'Resources'
+    );
+}
+
+# Call this function during initialization
+load_json_responses();
 
 my @jokes = (
     "Why don't scientists trust atoms? Because they make up everything!",
@@ -276,15 +306,34 @@ else {
         $response = $custom_commands{lc($input)};
     }
     else {
-        # Use backticks with multi-argument form via open
-        my $response;
-        open(my $cmd, '-|', 'python3', 'src/intelligent-answer-engine.py', $input) or die "Failed to run command: $!";
-        $response = do { local $/; <$cmd> };
-        close($cmd);
-        chomp($response);
+        my $matched = 0;
+        foreach my $category (keys %all_responses) {
+            my $patterns = $all_responses{$category}{patterns};
+            my $responses = $all_responses{$category}{responses};
+            
+            for my $pattern (@$patterns) {
+                if ($input =~ /$pattern/) {
+                    $response = $responses->[rand @$responses];
+                    $matched = 1;
+                    last;
+                }
+            }
+            last if $matched;
+        }
         
-        if ($? != 0) {
-            $response = "I don't understand that command.";
+        # If no JSON responses matched, try the Python engine
+        unless ($matched) {
+            # Use backticks with multi-argument form via open
+            open(my $cmd, '-|', 'python3', 'src/intelligent-answer-engine.py', $input) 
+                or die "Failed to run command: $!";
+            $response = do { local $/; <$cmd> };
+            close($cmd);
+            chomp($response);
+            
+            # Only use default message if Python engine also failed
+            if ($? != 0) {
+                $response = "I don't understand that command.";
+            }
         }
     }
     

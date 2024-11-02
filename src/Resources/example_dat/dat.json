@@ -1,0 +1,73 @@
+{
+    "common_questions": {
+        "greetings": {
+            "patterns": [
+                "(?i)\\b(hi|hello|hey|good morning|good afternoon|good evening)\\b",
+                "(?i)\\bhow are you\\b"
+            ],
+            "responses": [
+                "Hello! How can I help you today?",
+                "Hi there! What can I do for you?",
+                "Hey! I'm here to help."
+            ]
+        },
+        "time_related": {
+            "patterns": [
+                "(?i)\\b(what|current) time\\b",
+                "(?i)\\bwhat day\\b",
+                "(?i)\\bwhat (is the )?date\\b"
+            ],
+            "responses": [
+                "It's {time}",
+                "The current time is {time}",
+                "Today is {date}"
+            ]
+        },
+        "basic_math": {
+            "patterns": [
+                "(?i)(\\d+)\\s*([+\\-*/])\\s*(\\d+)",
+                "(?i)\\bcalculate\\s+(\\d+)\\s*([+\\-*/])\\s*(\\d+)\\b",
+                "(?i)\\bwhat is\\s+(\\d+)\\s*([+\\-*/])\\s*(\\d+)\\b"
+            ],
+            "responses": [
+                "The result is {result}",
+                "That would be {result}",
+                "{result}"
+            ]
+        },
+        "name_questions": {
+            "patterns": [
+                "(?i)\\bwhat('s| is) your name\\b",
+                "(?i)\\bwho are you\\b",
+                "(?i)\\bintroduce yourself\\b"
+            ],
+            "responses": [
+                "I'm an AI assistant, here to help you!",
+                "You can call me Assistant.",
+                "I'm your friendly AI helper."
+            ]
+        },
+        "gratitude": {
+            "patterns": [
+                "(?i)\\b(thanks|thank you|thx)\\b",
+                "(?i)\\bappreciate (it|that)\\b"
+            ],
+            "responses": [
+                "You're welcome!",
+                "Happy to help!",
+                "Anytime!"
+            ]
+        },
+        "farewells": {
+            "patterns": [
+                "(?i)\\b(goodbye|bye|see you|farewell)\\b",
+                "(?i)\\bhave a (good|nice) (day|night)\\b"
+            ],
+            "responses": [
+                "Goodbye! Have a great day!",
+                "See you later!",
+                "Take care!"
+            ]
+        }
+    }
+}

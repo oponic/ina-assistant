@@ -3,12 +3,25 @@ import java.awt.*;
 import java.io.*;
 import java.net.*;
 import java.nio.file.*;
+import java.util.*;
 
 public class InaInstaller {
     private JFrame frame;
     private JProgressBar progressBar;
     private JTextArea logArea;
     private JButton installButton;
+    
+    private static final List<String> PYTHON_DEPS = Arrays.asList(
+        "groq",
+        "requests"
+    );
+    
+    private static final List<String> PERL_DEPS = Arrays.asList(
+        "JSON",
+        "LWP::UserAgent",
+        "File::Find",
+        "HTTP::Request"
+    );
     
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new InaInstaller().createAndShowGUI());
@@ -60,11 +73,95 @@ public class InaInstaller {
         installButton.setEnabled(false);
         new Thread(() -> {
             try {
+                // Check Python
+                log("Checking Python installation...");
+                ProcessBuilder pythonCheck = new ProcessBuilder("python3", "--version");
+                Process pythonProc = pythonCheck.start();
+                if (pythonProc.waitFor() != 0) {
+                    throw new Exception("Python 3 is not installed!");
+                }
+                progressBar.setValue(5);
+
+                // Check pip
+                log("Checking pip installation...");
+                ProcessBuilder pipCheck = new ProcessBuilder("pip3", "--version");
+                Process pipProc = pipCheck.start();
+                if (pipProc.waitFor() != 0) {
+                    throw new Exception("pip3 is not installed!");
+                }
+                progressBar.setValue(10);
+
+                // Install Python dependencies
+                log("Installing Python dependencies...");
+                for (String dep : PYTHON_DEPS) {
+                    log("Installing " + dep + "...");
+                    ProcessBuilder pb = new ProcessBuilder("pip3", "install", "--user", dep);
+                    pb.redirectErrorStream(true);
+                    Process p = pb.start();
+                    
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(p.getInputStream()))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            log(line);
+                        }
+                    }
+                    
+                    if (p.waitFor() != 0) {
+                        throw new Exception("Failed to install " + dep);
+                    }
+                }
+                progressBar.setValue(30);
+
+                // Check Perl
+                log("Checking Perl installation...");
+                ProcessBuilder perlCheck = new ProcessBuilder("perl", "--version");
+                Process perlProc = perlCheck.start();
+                if (perlProc.waitFor() != 0) {
+                    throw new Exception("Perl is not installed!");
+                }
+                progressBar.setValue(35);
+
+                // Install cpanm if not present
+                log("Checking/Installing cpanm...");
+                ProcessBuilder cpanmCheck = new ProcessBuilder("cpanm", "--version");
+                if (cpanmCheck.start().waitFor() != 0) {
+                    log("Installing cpanm...");
+                    ProcessBuilder installCpanm = new ProcessBuilder("curl", "-L", 
+                        "https://cpanmin.us", "|", "perl", "-", "--sudo", "App::cpanminus");
+                    if (installCpanm.start().waitFor() != 0) {
+                        throw new Exception("Failed to install cpanm");
+                    }
+                }
+                progressBar.setValue(40);
+
+                // Install Perl dependencies
+                log("Installing Perl dependencies...");
+                for (String dep : PERL_DEPS) {
+                    log("Installing " + dep + "...");
+                    ProcessBuilder pb = new ProcessBuilder("cpanm", dep);
+                    pb.redirectErrorStream(true);
+                    Process p = pb.start();
+                    
+                    try (BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(p.getInputStream()))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            log(line);
+                        }
+                    }
+                    
+                    if (p.waitFor() != 0) {
+                        throw new Exception("Failed to install " + dep);
+                    }
+                }
+                progressBar.setValue(50);
+
                 // Check Java
                 log("Checking Java installation...");
                 String javaVersion = System.getProperty("java.version");
                 log("Found Java " + javaVersion);
-                progressBar.setValue(10);
+                progressBar.setValue(60);
                 
                 // Determine install paths
                 String osName = System.getProperty("os.name").toLowerCase();
@@ -85,7 +182,7 @@ public class InaInstaller {
                 log("Installing to: " + installDir);
                 Files.createDirectories(Paths.get(installDir));
                 Files.createDirectories(Paths.get(binDir));
-                progressBar.setValue(20);
+                progressBar.setValue(70);
                 
                 // Download files
                 log("Downloading INA files...");
@@ -94,14 +191,14 @@ public class InaInstaller {
                 try (InputStream in = url.openStream()) {
                     Files.copy(in, Paths.get(zipPath), StandardCopyOption.REPLACE_EXISTING);
                 }
-                progressBar.setValue(60);
+                progressBar.setValue(90);
                 
                 // Extract files
                 log("Extracting files...");
                 ProcessBuilder pb = new ProcessBuilder("unzip", "-o", zipPath, "-d", installDir);
                 pb.start().waitFor();
                 Files.delete(Paths.get(zipPath));
-                progressBar.setValue(80);
+                progressBar.setValue(100);
                 
                 // Create launcher
                 log("Creating launcher script...");
@@ -111,6 +208,21 @@ public class InaInstaller {
                 
                 if (!osName.contains("windows")) {
                     new File(launcher).setExecutable(true);
+                }
+                
+                // Create .key file
+                log("Setting up API key...");
+                String keyPath = installDir + "/.key";
+                String apiKey = JOptionPane.showInputDialog(frame, 
+                    "Please enter your Groq API key:",
+                    "API Key Required",
+                    JOptionPane.QUESTION_MESSAGE);
+                
+                if (apiKey != null && !apiKey.trim().isEmpty()) {
+                    Files.write(Paths.get(keyPath), apiKey.trim().getBytes());
+                    log("API key saved successfully.");
+                } else {
+                    log("Warning: No API key provided. You'll need to set it manually later.");
                 }
                 
                 progressBar.setValue(100);
@@ -124,6 +236,10 @@ public class InaInstaller {
                 
             } catch (Exception e) {
                 log("Error: " + e.getMessage());
+                StringWriter sw = new StringWriter();
+                e.printStackTrace(new PrintWriter(sw));
+                log("Stack trace: " + sw.toString());
+                
                 JOptionPane.showMessageDialog(frame,
                     "Installation failed: " + e.getMessage(),
                     "Error",
